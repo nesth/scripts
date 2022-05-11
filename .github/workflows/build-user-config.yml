@@ -23,7 +23,7 @@ on:
         default: 'firmware'
         required: false
         type: string
-      artifact-days:
+      artifact_days:
         description: 'Artifact retention days'
         required: false
         type: string
@@ -42,10 +42,10 @@ jobs:
       - name: Install yaml2json
         run: python3 -m pip install remarshal
 
-      - id: set-matrix
-        name: Fetch Build Matrix
+      - name: Fetch Build Matrix
+        id: set-matrix
+        shell: sh -x {0}
         run: |
-          set -x
           matrix=$(yaml2json ${{ inputs.build_matrix_path }} | jq -c .)
           yaml2json ${{ inputs.build_matrix_path }}
           echo "::set-output name=matrix::${matrix}"
@@ -62,9 +62,10 @@ jobs:
     steps:
       - name: Prepare variables
         id: variables
+        shell: sh -x {0}
         run: |
-          set -x
-          if [ -n "${{ matrix.shield }}" ]; then
+          if [ -n "${{ matrix.shield }}" ]
+          then
             EXTRA_CMAKE_ARGS="-DSHIELD=${{ matrix.shield }}"
             ARTIFACT_NAME="${{ matrix.shield }}-${{ matrix.board }}-zmk"
             DISPLAY_NAME="${{ matrix.shield }} - ${{ matrix.board }}"
@@ -87,35 +88,31 @@ jobs:
         env:
           cache-name: cache-zephyr-${{ steps.variables.outputs.zephyr-version }}-modules
         with:
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/west.yml', '**/build.yaml') }}
+          restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-
           path: |
             modules/
             tools/
             zephyr/
             bootloader/
             zmk/
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/west.yml', '**/build.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
 
-      - name: West Init
-        run: west init -l ${{ inputs.config_path }}
+      - name: West setup
+        shell: sh -x {0}
+        run: |
+          west init -l ${{ inputs.config_path }}
+          west update
+          west zephyr-export
 
-      - name: West Update
-        run: west update
-
-      - name: West Zephyr export
-        run: west zephyr-export
-
-      - name: West Build (${{ steps.variables.outputs.display-name }})
+      - name: West build (${{ steps.variables.outputs.display-name }})
+        shell: sh -x {0}
         run: |
           west build -s zmk/app -b ${{ matrix.board }} -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/${{ inputs.config_path }} ${{ steps.variables.outputs.extra-cmake-args }} ${{ matrix.cmake-args }}
-
-      - name: ${{ steps.variables.outputs.display-name }} Kconfig file
-        run: cat build/zephyr/.config | grep -v "^#" | grep -v "^$" | sort
+          grep -v -e "^#" -e "^$" build/zephyr/.config | sort
 
       - name: Rename artifacts
+        shell: sh -x {0}
         run: |
-          set -x
           mkdir build/artifacts
           if [ -f build/zephyr/zmk.uf2 ]
           then
@@ -128,6 +125,6 @@ jobs:
       - name: Archive (${{ steps.variables.outputs.display-name }})
         uses: actions/upload-artifact@v3
         with:
+          retention-days: ${{ inputs.artifact_days }}
           name: ${{ inputs.artifact_name }}
           path: build/artifacts
-          retention-days: ${{ inputs.artifact-days }}
