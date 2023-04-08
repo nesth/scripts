@@ -46,11 +46,15 @@ jobs:
           for (const response of [cancelled, skipped, failure]) {
             for (const run of response.data.workflow_runs) {
               console.log(`Deleting cancelled/skipped/failed run id ${run.id} of '${run.name}'`);
-              await github.rest.actions.deleteWorkflowRun({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: run.id
-              });
+              try {
+                await github.rest.actions.deleteWorkflowRun({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: run.id
+                });
+              } catch (error) {
+                // ignore errors
+              }
             }
           }
 
@@ -76,13 +80,13 @@ jobs:
             }
           }
 
-          for (const run of runs_to_delete) {
-            console.log(`Deleting run id ${run[0]} of '${run[1]}' that is older than ${num_days} days.`);
+          for (const job of runs_to_delete) {
+            console.log(`Deleting run id ${job[0]} of '${job[1]}' that is older than ${num_days} days.`);
             try {
               await github.rest.actions.deleteWorkflowRun({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                run_id: run[0]
+                run_id: job[0]
               });
             } catch (error) {
               // ignore errors
