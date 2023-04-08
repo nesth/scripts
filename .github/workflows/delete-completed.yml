@@ -17,8 +17,8 @@ jobs:
         script: |
           const completed = await github.rest.actions.listWorkflowRunsForRepo({
             owner: context.repo.owner,
-            per_page: 100,
             repo: context.repo.repo,
+            per_page: 100,
             status: 'completed',
           });
 

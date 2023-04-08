@@ -16,28 +16,36 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - name: Purge cancelled/skipped runs
+
+    - name: Delete cancelled/skipped/failed runs
       uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const cancelled = await github.rest.actions.listWorkflowRunsForRepo({
             owner: context.repo.owner,
-            per_page: 100,
             repo: context.repo.repo,
+            per_page: 100,
             status: 'cancelled',
           });
 
           const skipped = await github.rest.actions.listWorkflowRunsForRepo({
             owner: context.repo.owner,
-            per_page: 100,
             repo: context.repo.repo,
+            per_page: 100,
             status: 'skipped',
           });
 
-          for (const response of [cancelled, skipped]) {
+          const failure = await github.rest.actions.listWorkflowRunsForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100,
+            status: 'failure',
+          });
+
+          for (const response of [cancelled, skipped, failure]) {
             for (const run of response.data.workflow_runs) {
-              console.log(`Deleting cancelled/skipped run id ${run.id} of '${run.name}'`);
+              console.log(`Deleting cancelled/skipped/failed run id ${run.id} of '${run.name}'`);
               await github.rest.actions.deleteWorkflowRun({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -58,8 +66,8 @@ jobs:
 
           const workruns = await github.rest.actions.listWorkflowRunsForRepo({
             owner: context.repo.owner,
-            per_page: 100,
             repo: context.repo.repo,
+            per_page: 100,
           });
 
           for (const run of workruns.data.workflow_runs) {
