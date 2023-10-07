@@ -29,7 +29,7 @@ jobs:
       run: echo "days=$([ ${{ inputs.purge-age }} -gt 0 ] && echo ${{ inputs.purge-age }} || echo 0)" >> $GITHUB_ENV
 
     - name: Delete ${{ env.days }} days old jobs
-      if: ${{ env.days > 0 }}
+      if: env.days > 0
       uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -67,7 +67,7 @@ jobs:
           }
 
     - name: Delete all incomplete jobs
-      if: ${{ inputs.delete-all-incomplete }}
+      if: inputs.delete-all-incomplete
       uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -113,7 +113,7 @@ jobs:
           }
 
     - name: Delete all completed jobs
-      if: ${{ inputs.delete-all-completed }}
+      if: inputs.delete-all-completed
       uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
