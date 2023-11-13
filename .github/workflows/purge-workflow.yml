@@ -30,7 +30,7 @@ jobs:
 
     - name: Delete ${{ env.days }} days old jobs
       if: env.days > 0
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
@@ -68,7 +68,7 @@ jobs:
 
     - name: Delete all incomplete jobs
       if: inputs.delete-all-incomplete
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
@@ -114,7 +114,7 @@ jobs:
 
     - name: Delete all completed jobs
       if: inputs.delete-all-completed
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
