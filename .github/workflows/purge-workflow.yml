@@ -26,7 +26,13 @@ jobs:
     timeout-minutes: 10
     steps:
     - name: Validate purge age
-      run: echo "days=$([ ${{ inputs.purge-age }} -gt 0 ] && echo ${{ inputs.purge-age }} || echo 0)" >> $GITHUB_ENV
+      run: |
+        if [ ${{ inputs.purge-age }} -gt 0 ]
+        then
+          echo "days=${{ inputs.purge-age }}" >> $GITHUB_ENV
+        else
+          echo "days=0" >> $GITHUB_ENV
+        fi
 
     - name: Delete ${{ env.days }} days old jobs
       if: env.days > 0
